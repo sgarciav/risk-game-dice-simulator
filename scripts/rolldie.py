@@ -23,7 +23,8 @@ class DiceData:
         self.team = team
         self.num_dice = None
         self.max_dice = max_dice(team)
-        self.vals = []
+        self.rolls = []
+        self.W = 0
 
 
 # global variables
@@ -94,25 +95,44 @@ def main_loop():
     attacker.num_dice = attacker.max_dice if attacker.num_troops > attacker.max_dice else attacker.num_troops - 1
     defender.num_dice = defender.max_dice if defender.num_troops > defender.max_dice else defender.num_troops
 
-    if (args_.verbose):
-        print '-- attacker attacking with ' + str(attacker.num_dice) + ' rolls'
-        print '-- defender attacking with ' + str(defender.num_dice) + ' rolls'
-
     # generate dice rolls
     for i in range(0, attacker.num_dice):
         d = random.randint(1,6)
-        attacker.vals.append(d)
+        attacker.rolls.append(d)
 
     for i in range(0, defender.num_dice):
         d = random.randint(1,6)
-        defender.vals.append(d)
+        defender.rolls.append(d)
 
     # sort dice rolls
-    attacker.vals.sort()
-    defender.vals.sort()
+    attacker.rolls.sort(reverse=True)
+    defender.rolls.sort(reverse=True)
 
-    # compare rolls
-    m = min(len(attacker.vals), len(defender.vals))
+    # count wins for each team
+    m = min(len(attacker.rolls), len(defender.rolls))
+    for i in range(0, m):
+        if attacker.rolls[i] > defender.rolls[i]:
+            attacker.W += 1
+        else:
+            defender.W +=1
+
+    # update number of troops based on rolls
+    attacker.num_troops -= defender.W
+    defender.num_troops -= attacker.W
+
+    # print results
+    if (args_.verbose):
+        print 'Attacker'
+        print '----------------'
+        print '-- attacking with ' + str(attacker.num_dice) + ' rolls'
+        print '-- rolls: ' + str(attacker.rolls) + ' --> wins: ' + str(attacker.W)
+        print '-- remaining troops: ' + str(attacker.num_troops)
+        print ' '
+        print 'Defender'
+        print '----------------'
+        print '-- defender with ' + str(defender.num_dice) + ' rolls'
+        print '-- rolls: ' + str(defender.rolls) + ' --> wins: ' + str(defender.W)
+        print '-- remaining troops: ' + str(defender.num_troops)
 
 
 if __name__ == '__main__':
