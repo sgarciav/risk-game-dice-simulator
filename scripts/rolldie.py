@@ -54,8 +54,8 @@ def parse_arguments():
 
     # optional
     parser.add_argument(
-        "--verbose",
-        type=str2bool, default=True,
+        "--quiet",
+        action='store_true',
         help="Run without displaying progress."
     )
 
@@ -67,17 +67,6 @@ def parse_arguments():
         print 'attacker troops: ' + str(args_.attacker_troops) + ' | min: 2'
         print 'defender troops: ' + str(args_.defender_troops) + ' | min: 1'
         sys.exit()
-
-
-# -----------------------
-def str2bool(v):
-    ''' string to bool '''
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 # main loop
@@ -104,13 +93,12 @@ def main_loop():
         d = random.randint(1,6)
         defender.rolls.append(d)
 
-    # sort dice rolls
+    # sort dice rolls from max to min
     attacker.rolls.sort(reverse=True)
     defender.rolls.sort(reverse=True)
 
     # count wins for each team
-    m = min(len(attacker.rolls), len(defender.rolls))
-    for i in range(0, m):
+    for i in range(0, min(len(attacker.rolls), len(defender.rolls))):
         if attacker.rolls[i] > defender.rolls[i]:
             attacker.W += 1
         else:
@@ -121,7 +109,7 @@ def main_loop():
     defender.num_troops -= attacker.W
 
     # print results
-    if (args_.verbose):
+    if not args_.quiet:
         print 'Attacker'
         print '----------------'
         print '-- attacking with ' + str(attacker.num_dice) + ' rolls'
@@ -133,6 +121,7 @@ def main_loop():
         print '-- defender with ' + str(defender.num_dice) + ' rolls'
         print '-- rolls: ' + str(defender.rolls) + ' --> wins: ' + str(defender.W)
         print '-- remaining troops: ' + str(defender.num_troops)
+        print ' '
 
 
 if __name__ == '__main__':

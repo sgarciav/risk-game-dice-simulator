@@ -6,7 +6,15 @@ each team has left after each roll. So why not simulate the process? That's
 exactly what we did. Take advantage of our exciting interface to simulate your
 RISK dice rolls and focus on taking over the world!
 
-In progress ...
+# Usage
+
+* For help on the inputs and options, open a new terminal and execute:
+
+        $ cd path/to/scripts
+        $ ./rolldie.py -h
+
+* Each iteration of the simulation represents one battle. The program will ask
+  user if they want to continue or stop. Progress is displayed after each battle.
 
 # Authors
 
