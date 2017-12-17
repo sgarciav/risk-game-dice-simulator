@@ -22,7 +22,7 @@ class DiceData:
         self.num_troops = num_troops
         self.team = team
         self.num_dice = None
-        self.max_dice = max_dice(team)
+        self.max_dice = max_dice(self.team)
         self.rolls = []
         self.W = 0
 
@@ -69,6 +69,26 @@ def parse_arguments():
         sys.exit()
 
 
+# -----------------------
+def resetFields(group):
+    ''' Update the team parameters as setup for the next battle '''
+
+    group.W = 0
+    group.rolls = []
+    return group
+
+
+# -----------------------
+def str2bool(v):
+    ''' string to bool '''
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 # main loop
 # =======================================
 def main_loop():
@@ -80,48 +100,84 @@ def main_loop():
     attacker = DiceData('attacker', args_.attacker_troops)
     defender = DiceData('defender', args_.defender_troops)
 
-    # get number of dice each team has
-    attacker.num_dice = attacker.max_dice if attacker.num_troops > attacker.max_dice else attacker.num_troops - 1
-    defender.num_dice = defender.max_dice if defender.num_troops > defender.max_dice else defender.num_troops
+    next_battle = True
+    battles_fought = 0
 
-    # generate dice rolls
-    for i in range(0, attacker.num_dice):
-        d = random.randint(1,6)
-        attacker.rolls.append(d)
+    while next_battle:
 
-    for i in range(0, defender.num_dice):
-        d = random.randint(1,6)
-        defender.rolls.append(d)
+        # reset fields
+        attacker = resetFields(attacker)
+        defender = resetFields(defender)
 
-    # sort dice rolls from max to min
-    attacker.rolls.sort(reverse=True)
-    defender.rolls.sort(reverse=True)
+        # get number of dice each team has
+        attacker.num_dice = attacker.max_dice if attacker.num_troops > attacker.max_dice else attacker.num_troops - 1
+        defender.num_dice = defender.max_dice if defender.num_troops > defender.max_dice else defender.num_troops
 
-    # count wins for each team
-    for i in range(0, min(len(attacker.rolls), len(defender.rolls))):
-        if attacker.rolls[i] > defender.rolls[i]:
-            attacker.W += 1
+        # TODO: move these repeating events to separate function
+
+        # generate dice rolls
+        for i in range(0, attacker.num_dice):
+            d = random.randint(1,6)
+            attacker.rolls.append(d)
+
+        for i in range(0, defender.num_dice):
+            d = random.randint(1,6)
+            defender.rolls.append(d)
+
+        # sort dice rolls from max to min
+        attacker.rolls.sort(reverse=True)
+        defender.rolls.sort(reverse=True)
+
+        # count wins for each team
+        for i in range(0, min(len(attacker.rolls), len(defender.rolls))):
+            if attacker.rolls[i] > defender.rolls[i]:
+                attacker.W += 1
+            else:
+                defender.W +=1
+
+        # update number of troops based on rolls
+        attacker.num_troops -= defender.W
+        defender.num_troops -= attacker.W
+
+        battles_fought += 1
+
+        # print results
+        print ''
+        print 'Battle #' + str(battles_fought)
+        print '================================================'
+
+        if args_.quiet:
+            print '-- Attacker remaining troops: ' + str(attacker.num_troops)
+            print '-- Defender remaining troops: ' + str(defender.num_troops)
+            print ''
         else:
-            defender.W +=1
+            print ''
+            print 'Attacker'
+            print '----------------'
+            print '-- attacked with ' + str(attacker.num_dice) + ' rolls'
+            print '-- rolls: ' + str(attacker.rolls) + ' --> wins: ' + str(attacker.W)
+            print '-- remaining troops: ' + str(attacker.num_troops)
+            print ''
+            print 'Defender'
+            print '----------------'
+            print '-- defended with ' + str(defender.num_dice) + ' rolls'
+            print '-- rolls: ' + str(defender.rolls) + ' --> wins: ' + str(defender.W)
+            print '-- remaining troops: ' + str(defender.num_troops)
+            print ''
 
-    # update number of troops based on rolls
-    attacker.num_troops -= defender.W
-    defender.num_troops -= attacker.W
+        # automatically stop if a team loses all of its troops
+        if attacker.num_troops < 2 or defender.num_troops <= 0:
+            next_battle = False
+            continue
 
-    # print results
-    if not args_.quiet:
-        print 'Attacker'
-        print '----------------'
-        print '-- attacking with ' + str(attacker.num_dice) + ' rolls'
-        print '-- rolls: ' + str(attacker.rolls) + ' --> wins: ' + str(attacker.W)
-        print '-- remaining troops: ' + str(attacker.num_troops)
-        print ' '
-        print 'Defender'
-        print '----------------'
-        print '-- defender with ' + str(defender.num_dice) + ' rolls'
-        print '-- rolls: ' + str(defender.rolls) + ' --> wins: ' + str(defender.W)
-        print '-- remaining troops: ' + str(defender.num_troops)
-        print ' '
+        # ask user if they want to continue or stop
+        r = raw_input("Go on to next battle? [Y/n]: ") or "Y"
+        next_battle = str2bool(r)
+
+    # END
+    print '============================'
+    print '         WAR HAS ENDED      '
+    print '============================'
 
 
 if __name__ == '__main__':
