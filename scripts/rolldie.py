@@ -79,6 +79,18 @@ def resetFields(group):
 
 
 # -----------------------
+def getRolls(group):
+    ''' Generate corresponding number of rolls '''
+
+    for i in range(0, group.num_dice):
+        d = random.randint(1,6)
+        group.rolls.append(d)
+
+    group.rolls.sort(reverse=True)
+    return group
+
+
+# -----------------------
 def str2bool(v):
     ''' string to bool '''
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -113,20 +125,9 @@ def main_loop():
         attacker.num_dice = attacker.max_dice if attacker.num_troops > attacker.max_dice else attacker.num_troops - 1
         defender.num_dice = defender.max_dice if defender.num_troops > defender.max_dice else defender.num_troops
 
-        # TODO: move these repeating events to separate function
-
         # generate dice rolls
-        for i in range(0, attacker.num_dice):
-            d = random.randint(1,6)
-            attacker.rolls.append(d)
-
-        for i in range(0, defender.num_dice):
-            d = random.randint(1,6)
-            defender.rolls.append(d)
-
-        # sort dice rolls from max to min
-        attacker.rolls.sort(reverse=True)
-        defender.rolls.sort(reverse=True)
+        attacker = getRolls(attacker)
+        defender = getRolls(defender)
 
         # count wins for each team
         for i in range(0, min(len(attacker.rolls), len(defender.rolls))):
@@ -175,8 +176,13 @@ def main_loop():
         next_battle = str2bool(r)
 
     # END
+    winner = 'ATTACKER' if attacker.num_troops > defender.num_troops else 'DEFENDER'
+    msg = '       ' + winner + ' WINS      '
+    if defender.num_troops == attacker.num_troops:
+        msg = '             DRAW           '
+
     print '============================'
-    print '         WAR HAS ENDED      '
+    print msg
     print '============================'
 
 
